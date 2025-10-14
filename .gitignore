@@ -1,0 +1,16 @@
+# 忽略编译产物
+/build/
+/dist/
+*.class
+__pycache__
+# 忽略日志与临时文件
+*.log
+*.tmp
+
+# 忽略IDE配置
+.idea/
+.vscode/
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
