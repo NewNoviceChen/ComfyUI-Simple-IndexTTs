@@ -1,13 +1,14 @@
 import os
 from subprocess import CalledProcessError
 
-from huggingface_hub import snapshot_download, hf_hub_download
+
 import json
 import re
 import time
 import librosa
 import torch
 import torchaudio
+from huggingface_hub import hf_hub_download, snapshot_download
 from torch.nn.utils.rnn import pad_sequence
 
 import warnings
@@ -33,7 +34,7 @@ from transformers import SeamlessM4TFeatureExtractor
 import random
 import torch.nn.functional as F
 
-
+os.environ['HF_HUB_CACHE'] = 'D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts'
 class IndexTTS2:
     def __init__(
             self, cfg_path="checkpoints/config.yaml", model_dir="checkpoints", use_fp16=False, device=None,
@@ -71,9 +72,9 @@ class IndexTTS2:
             print(">> Be patient, it may take a while to run in CPU mode.")
         snapshot_download(
             repo_id="IndexTeam/IndexTTS-2",
-            local_dir="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts",  # 本地目录
-            local_dir_use_symlinks=False,  # 避免符号链接
-            resume_download=True,  # 支持断点续传
+            local_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts",
+            local_dir_use_symlinks=False,
+            resume_download=True,  # 禁用断点续传（减少缓存残留）
         )
         self.cfg = OmegaConf.load(cfg_path)
         self.model_dir = model_dir
@@ -112,7 +113,7 @@ class IndexTTS2:
                 self.use_cuda_kernel = False
 
         self.extract_features = SeamlessM4TFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0",
-                                                                            cache_dir="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts")
+                                                                            cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
         self.semantic_model, self.semantic_mean, self.semantic_std = build_semantic_model(
             os.path.join(self.model_dir, self.cfg.w2v_stat))
         self.semantic_model = self.semantic_model.to(self.device)
@@ -123,7 +124,7 @@ class IndexTTS2:
         semantic_codec = build_semantic_codec(self.cfg.semantic_codec)
         semantic_code_ckpt = hf_hub_download(repo_id="amphion/MaskGCT",
                                              filename="semantic_codec/model.safetensors",
-                                             cache_dir="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts")
+                                             cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
         safetensors.torch.load_model(semantic_codec, semantic_code_ckpt)
         self.semantic_codec = semantic_codec.to(self.device)
         self.semantic_codec.eval()
@@ -147,7 +148,7 @@ class IndexTTS2:
         # load campplus_model
         campplus_ckpt_path = hf_hub_download(repo_id="funasr/campplus",
                                              filename="campplus_cn_common.bin",
-                                             cache_dir="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts")
+                                             cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
         campplus_model = CAMPPlus(feat_dim=80, embedding_size=192)
         campplus_model.load_state_dict(torch.load(campplus_ckpt_path, map_location="cpu"))
         self.campplus_model = campplus_model.to(self.device)
@@ -155,7 +156,7 @@ class IndexTTS2:
         print(">> campplus_model weights restored from:", campplus_ckpt_path)
 
         bigvgan_name = self.cfg.vocoder.name
-        self.bigvgan = bigvgan.BigVGAN.from_pretrained(bigvgan_name, use_cuda_kernel=self.use_cuda_kernel)
+        self.bigvgan = bigvgan.BigVGAN.from_pretrained(bigvgan_name, use_cuda_kernel=self.use_cuda_kernel,cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
         self.bigvgan = self.bigvgan.to(self.device)
         self.bigvgan.remove_weight_norm()
         self.bigvgan.eval()
@@ -421,7 +422,7 @@ class IndexTTS2:
             emo_alpha = 1.0
 
         # 如果参考音频改变了，才需要重新生成, 提升速度
-        if self.cache_spk_cond is None or self.cache_spk_audio_prompt != spk_audio_prompt:
+        if self.cache_spk_cond is None or is_tensor_equal(self.cache_spk_audio_prompt,spk_audio_prompt):
             if self.cache_spk_cond is not None:
                 self.cache_spk_cond = None
                 self.cache_s2mel_style = None
@@ -479,7 +480,7 @@ class IndexTTS2:
             emovec_mat = torch.sum(emovec_mat, 0)
             emovec_mat = emovec_mat.unsqueeze(0)
 
-        if self.cache_emo_cond is None or self.cache_emo_audio_prompt != emo_audio_prompt:
+        if self.cache_emo_cond is None or is_tensor_equal(self.cache_emo_audio_prompt,emo_audio_prompt):
             if self.cache_emo_cond is not None:
                 self.cache_emo_cond = None
                 torch.cuda.empty_cache()
@@ -716,7 +717,13 @@ def find_most_similar_cosine(query_vector, matrix):
     similarities = F.cosine_similarity(query_vector, matrix, dim=1)
     most_similar_index = torch.argmax(similarities)
     return most_similar_index
-
+def is_tensor_equal(a, b):
+    if isinstance(a, torch.Tensor) and isinstance(b, torch.Tensor):
+        return torch.equal(a, b)
+    elif isinstance(a, str) and isinstance(b, str):
+        return a == b
+    else:
+        return False  # 类型不匹配，直接返回 False
 
 class QwenEmotion:
     def __init__(self, model_dir):
@@ -830,31 +837,6 @@ class QwenEmotion:
             # print(">>  after vec swap", content)
 
         return self.convert(content)
-
-
-def snapshot_download_or_get_model(repo_id, local_dir, allow_patterns=None):
-    repo_dir = os.path.join(local_dir, repo_id.replace('/', '_'))
-
-    if os.path.exists(repo_dir) and len(os.listdir(repo_dir)) > 0:
-        print(f"✅ 使用现有模型: {repo_dir}")
-        return repo_dir
-
-    # 下载模型
-    print(f"📥 下载模型: {repo_id}")
-    try:
-        downloaded_dir = snapshot_download(
-            repo_id=repo_id,
-            local_dir=repo_dir,
-            cache_dir=local_dir,
-            local_files_only=False,
-            allow_patterns=allow_patterns  # 可选：只下载特定文件
-        )
-        print(f"✅ 下载完成: {downloaded_dir}")
-        return downloaded_dir
-    except Exception as e:
-        print(f"❌ 下载失败: {e}")
-        # 可以返回None或抛出异常
-        return None
 
 
 if __name__ == "__main__":
