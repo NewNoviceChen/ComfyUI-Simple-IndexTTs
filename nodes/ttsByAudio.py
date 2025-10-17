@@ -1,51 +1,147 @@
 import os
 import random
+import re
 
+import folder_paths
 import torch
 import torchaudio
-import folder_paths
-
-from ..server.infer_v2 import IndexTTS2
+from comfy_api.latest import ComfyExtension, io, ui
 
 
-class TTsByAudioNode:
-    def __init__(self):
-        self.output_dir = folder_paths.get_temp_directory()
-        self.type = "temp"
-        self.prefix_append = "_temp_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
-
-    CATEGORY = "ComfyUI-Simple-IndexTTS"
+class TTsNode(io.ComfyNode):
+    @classmethod
+    def define_schema(cls) -> io.Schema:
+        return io.Schema(
+            node_id="TTsNode",
+            display_name="音频生成",
+            category="ComfyUI-Simple-IndexTTS",
+            description="音频生成",
+            is_output_node=True,
+            inputs=[
+                io.Custom("IndexTTsModel").Input("IndexTTsModel"),
+                io.String.Input("text", multiline=True),
+                io.Custom("emotion").Input("emotion", optional=True),
+            ],
+            outputs=[
+                io.Audio.Output()
+            ]
+        )
 
     @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model": ("IndexTTsModel", ),
-                "audio": ("AUDIO",),
-                "text": ("STRING", {"multiline": True}),
-                "format": (["wav", "mp3", "flac"],),
-            },
-        }
-
-    OUTPUT_NODE = True
-    RETURN_TYPES = ("AUDIO",)
-    # RETURN_NAMES = ()
-    FUNCTION = "ttsByAudio"
-
-    def ttsByAudio(self, model,audio, text, format):
+    def execute(cls, IndexTTsModel, spk_audio=None, text=None, emotion=None) -> io.NodeOutput:
+        output_dir = folder_paths.get_temp_directory()
+        prefix_append = "_temp_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
-            self.prefix_append, self.output_dir)
-        file = f"{filename}_{counter:05}_.{format}"
+            prefix_append, output_dir)
+        file = f"{filename}_{counter:05}_.flac"
         output_path = os.path.join(full_output_folder, file)
-        print(f">> {output_path}")
-        waveform = audio["waveform"].squeeze(0)
-        sample_rate = audio["sample_rate"]
-        waveform = torchaudio.functional.resample(waveform, sample_rate, 22050).mean(dim=0, keepdim=True)
-
-        model.infer(spk_audio_prompt=waveform, text=text,
-                  output_path=output_path,
-                  verbose=True)
-
+        if emotion is not None:
+            spk_waveform = emotion["spk_waveform"]
+            if emotion["type"] == "audio":
+                emo_waveform = emotion["emo_waveform"]
+                emo_waveform_weight = emotion["emo_waveform_weight"]
+                IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                    text=text,
+                                    output_path=output_path,
+                                    emo_audio_prompt=emo_waveform,
+                                    emo_alpha=emo_waveform_weight,
+                                    verbose=True)
+            elif emotion["type"] == "tensor":
+                use_random = emotion["use_random"]
+                emo_tensor = emotion["emo_tensor"]
+                IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                    text=text,
+                                    output_path=output_path,
+                                    emo_vector=emo_tensor,
+                                    use_random=use_random,
+                                    verbose=True)
+            elif emotion["type"] == "text":
+                emo_text = emotion["emo_text"]
+                emo_text_weight = emotion["emo_text_weight"]
+                IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                    text=text,
+                                    output_path=output_path,
+                                    use_emo_text=True,
+                                    emo_alpha=emo_text_weight,
+                                    emo_text=emo_text,
+                                    verbose=True)
         waveform, sample_rate = torchaudio.load(output_path)
         audio = {"waveform": waveform.unsqueeze(0), "sample_rate": sample_rate}
-        return (audio,)
+        return io.NodeOutput(audio, ui=ui.PreviewAudio(audio, cls=cls))
+
+
+class BatchTTsNode(io.ComfyNode):
+    @classmethod
+    def define_schema(cls) -> io.Schema:
+        return io.Schema(
+            node_id="BatchTTsNode",
+            display_name="批量音频生成",
+            category="ComfyUI-Simple-IndexTTS",
+            description="批量音频生成",
+            is_output_node=True,
+            inputs=[
+                io.Custom("IndexTTsModel").Input("IndexTTsModel"),
+                io.Custom("emotion_list").Input("emotion_list", optional=True),
+                io.String.Input("text", multiline=True),
+            ],
+            outputs=[
+                io.Audio.Output()
+            ]
+        )
+
+    @classmethod
+    def execute(cls, IndexTTsModel, emotion_list, text) -> io.NodeOutput:
+        pattern = r'(.+?):\s*(.+)'
+        matches = re.findall(pattern, text)
+        waveforms = []
+        sample_rate =None
+        for name, content in matches:
+            print(f"名称: {name}, 内容: {content}")
+            for emotion in emotion_list:
+                if emotion["timbre_name"] == name:
+                    print(emotion)
+                    print(emotion["timbre_name"])
+                    output_dir = folder_paths.get_temp_directory()
+                    prefix_append = "_temp_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
+                    full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+                        prefix_append, output_dir)
+                    file = f"{filename}_{counter:05}_.flac"
+                    output_path = os.path.join(full_output_folder, file)
+                    spk_waveform = emotion["spk_waveform"]
+                    if emotion["type"] == "audio":
+                        emo_waveform = emotion["emo_waveform"]
+                        emo_waveform_weight = emotion["emo_waveform_weight"]
+                        IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                            text=content,
+                                            output_path=output_path,
+                                            emo_audio_prompt=emo_waveform,
+                                            emo_alpha=emo_waveform_weight,
+                                            verbose=True)
+                        print(emotion["type"],emotion["timbre_name"])
+                    elif emotion["type"] == "tensor":
+                        use_random = emotion["use_random"]
+                        emo_tensor = emotion["emo_tensor"]
+                        IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                            text=content,
+                                            output_path=output_path,
+                                            emo_vector=emo_tensor,
+                                            use_random=use_random,
+                                            verbose=True)
+                        print(emotion["type"], emotion["timbre_name"])
+                    elif emotion["type"] == "text":
+                        emo_text = emotion["emo_text"]
+                        emo_text_weight = emotion["emo_text_weight"]
+                        IndexTTsModel.infer(spk_audio_prompt=spk_waveform,
+                                            text=content,
+                                            output_path=output_path,
+                                            use_emo_text=True,
+                                            emo_alpha=emo_text_weight,
+                                            emo_text=emo_text,
+                                            verbose=True)
+                        print(emotion["type"], emotion["timbre_name"])
+                    waveform, sample_rate = torchaudio.load(output_path)
+                    waveforms.append(waveform)
+        result = torch.cat(waveforms,dim=1)
+        audio = {"waveform": result.unsqueeze(0), "sample_rate": sample_rate}
+        return io.NodeOutput(audio, ui=ui.PreviewAudio(audio, cls=cls))
+

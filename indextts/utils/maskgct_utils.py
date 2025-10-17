@@ -5,7 +5,8 @@ from huggingface_hub import hf_hub_download
 from transformers import SeamlessM4TFeatureExtractor, Wav2Vec2BertModel
 import safetensors
 import numpy as np
-
+import os
+import folder_paths
 from .maskgct.models.codec.kmeans.repcodec_model import RepCodec
 from .maskgct.models.tts.maskgct.maskgct_s2a import MaskGCT_S2A
 from .maskgct.models.codec.amphion_codec.codec import CodecEncoder, CodecDecoder
@@ -85,7 +86,7 @@ class JsonHParams:
 
 
 def build_semantic_model(path_='./models/tts/maskgct/ckpt/wav2vec2bert_stats.pt'):
-    semantic_model = Wav2Vec2BertModel.from_pretrained("facebook/w2v-bert-2.0",cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+    semantic_model = Wav2Vec2BertModel.from_pretrained("facebook/w2v-bert-2.0",cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
     semantic_model.eval()
     stat_mean_var = torch.load(path_)
     semantic_mean = stat_mean_var["mean"]

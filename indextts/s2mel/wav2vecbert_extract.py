@@ -14,6 +14,9 @@ import json5
 # from codec.kmeans.repcodec_model import RepCodec
 from startts.examples.ftchar.models.codec.kmeans.repcodec_model import RepCodec
 
+import folder_paths
+
+
 class JsonHParams:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -88,7 +91,7 @@ def load_config(config_fn, lowercase=False):
 class Extract_wav2vectbert:
     def __init__(self,device):
     #semantic_model = Wav2Vec2BertModel.from_pretrained("facebook/w2v-bert-2.0")
-        self.semantic_model = Wav2Vec2BertModel.from_pretrained("./MaskGCT_model/w2v_bert/",cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+        self.semantic_model = Wav2Vec2BertModel.from_pretrained("./MaskGCT_model/w2v_bert/",cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
         self.semantic_model.eval()
         self.semantic_model.to(device)
         self.stat_mean_var = torch.load("./MaskGCT_model/wav2vec2bert_stats.pt")

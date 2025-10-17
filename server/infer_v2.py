@@ -10,7 +10,7 @@ import torch
 import torchaudio
 from huggingface_hub import hf_hub_download, snapshot_download
 from torch.nn.utils.rnn import pad_sequence
-
+import folder_paths
 import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -34,7 +34,8 @@ from transformers import SeamlessM4TFeatureExtractor
 import random
 import torch.nn.functional as F
 
-os.environ['HF_HUB_CACHE'] = 'D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts'
+
+os.environ['HF_HUB_CACHE'] = os.path.join(folder_paths.models_dir,"indextts")
 class IndexTTS2:
     def __init__(
             self, cfg_path="checkpoints/config.yaml", model_dir="checkpoints", use_fp16=False, device=None,
@@ -72,7 +73,7 @@ class IndexTTS2:
             print(">> Be patient, it may take a while to run in CPU mode.")
         snapshot_download(
             repo_id="IndexTeam/IndexTTS-2",
-            local_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts",
+            local_dir=os.path.join(folder_paths.models_dir,"indextts"),
             local_dir_use_symlinks=False,
             resume_download=True,  # 禁用断点续传（减少缓存残留）
         )
@@ -104,7 +105,7 @@ class IndexTTS2:
         if self.use_cuda_kernel:
             # preload the CUDA kernel for BigVGAN
             try:
-                from indextts.s2mel.modules.bigvgan.alias_free_activation.cuda import activation1d
+                from ..indextts.s2mel.modules.bigvgan.alias_free_activation.cuda import activation1d
 
                 print(">> Preload custom CUDA kernel for BigVGAN", activation1d.anti_alias_activation_cuda)
             except Exception as e:
@@ -113,7 +114,7 @@ class IndexTTS2:
                 self.use_cuda_kernel = False
 
         self.extract_features = SeamlessM4TFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0",
-                                                                            cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+                                                                            cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
         self.semantic_model, self.semantic_mean, self.semantic_std = build_semantic_model(
             os.path.join(self.model_dir, self.cfg.w2v_stat))
         self.semantic_model = self.semantic_model.to(self.device)
@@ -124,7 +125,7 @@ class IndexTTS2:
         semantic_codec = build_semantic_codec(self.cfg.semantic_codec)
         semantic_code_ckpt = hf_hub_download(repo_id="amphion/MaskGCT",
                                              filename="semantic_codec/model.safetensors",
-                                             cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+                                             cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
         safetensors.torch.load_model(semantic_codec, semantic_code_ckpt)
         self.semantic_codec = semantic_codec.to(self.device)
         self.semantic_codec.eval()
@@ -148,7 +149,7 @@ class IndexTTS2:
         # load campplus_model
         campplus_ckpt_path = hf_hub_download(repo_id="funasr/campplus",
                                              filename="campplus_cn_common.bin",
-                                             cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+                                             cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
         campplus_model = CAMPPlus(feat_dim=80, embedding_size=192)
         campplus_model.load_state_dict(torch.load(campplus_ckpt_path, map_location="cpu"))
         self.campplus_model = campplus_model.to(self.device)
@@ -156,7 +157,7 @@ class IndexTTS2:
         print(">> campplus_model weights restored from:", campplus_ckpt_path)
 
         bigvgan_name = self.cfg.vocoder.name
-        self.bigvgan = bigvgan.BigVGAN.from_pretrained(bigvgan_name, use_cuda_kernel=self.use_cuda_kernel,cache_dir="D:\\gitProject\\ComfyUI_windows_portable\\ComfyUI\\models\\indextts")
+        self.bigvgan = bigvgan.BigVGAN.from_pretrained(bigvgan_name, use_cuda_kernel=self.use_cuda_kernel,cache_dir=os.path.join(folder_paths.models_dir,"indextts"))
         self.bigvgan = self.bigvgan.to(self.device)
         self.bigvgan.remove_weight_norm()
         self.bigvgan.eval()
@@ -708,7 +709,15 @@ class IndexTTS2:
             wav_data = wav.type(torch.int16)
             wav_data = wav_data.numpy().T
             yield (sampling_rate, wav_data)
+        self.reset_cache()
 
+    def reset_cache(self):
+        self.cache_spk_cond = None
+        self.cache_s2mel_style = None
+        self.cache_s2mel_prompt = None
+        self.cache_spk_audio_prompt = None
+        self.cache_mel = None
+        torch.cuda.empty_cache()
 
 def find_most_similar_cosine(query_vector, matrix):
     query_vector = query_vector.float()
@@ -837,12 +846,3 @@ class QwenEmotion:
             # print(">>  after vec swap", content)
 
         return self.convert(content)
-
-
-if __name__ == "__main__":
-    prompt_wav = "../examples/voice_01.wav"
-    text = '欢迎大家来体验indextts2，并给予我们意见与反馈，谢谢大家。'
-
-    tts = IndexTTS2(cfg_path="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts\config.yaml",
-                    model_dir="D:\gitProject\ComfyUI_windows_portable\ComfyUI\models\indextts", use_cuda_kernel=False)
-    tts.infer(spk_audio_prompt=prompt_wav, text=text, output_path="gen.wav", verbose=True)
