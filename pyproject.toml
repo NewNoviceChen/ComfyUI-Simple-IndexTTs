@@ -1,0 +1,16 @@
+[project]
+name = "ComfyUI-Simple-IndexTTs"
+description = "Bilibili IndexTTS2 ComfyUI Version - Auto-downloads models, simple to use."
+version = "1.0.2"
+license = {file = "LICENSE"}
+dependencies = ["librosa", "json5", "torch", "torchaudio", "huggingface_hub", "transformers<=4.53.0", "omegaconf", "einops", "descript-audiotools==0.7.2", "tokenizer", "eval", "munch", "accelerate", "wetext"]
+
+[project.urls]
+Repository = "https://github.com/NewNoviceChen/ComfyUI-Simple-IndexTTs"
+#  Used by Comfy Registry https://registry.comfy.org
+
+[tool.comfy]
+PublisherId = "novice-chen"
+DisplayName = "ComfyUI-Simple-IndexTTs"
+Icon = ""
+includes = []
