@@ -1,0 +1,234 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "revision": 0,
+  "last_node_id": 102,
+  "last_link_id": 82,
+  "nodes": [
+    {
+      "id": 98,
+      "type": "AutoLoadModelNode",
+      "pos": [
+        -2917.61181640625,
+        714.6762084960938
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IndexTTsModel",
+          "type": "IndexTTsModel",
+          "links": [
+            79
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AutoLoadModelNode"
+      }
+    },
+    {
+      "id": 100,
+      "type": "EmotionFromAudioNode",
+      "pos": [
+        -3128.347900390625,
+        886.527099609375
+      ],
+      "size": [
+        270,
+        102
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "spk_audio",
+          "type": "AUDIO",
+          "link": 80
+        },
+        {
+          "name": "emo_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "emotion",
+          "type": "emotion",
+          "links": [
+            81
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmotionFromAudioNode"
+      },
+      "widgets_values": [
+        "",
+        0.6
+      ]
+    },
+    {
+      "id": 99,
+      "type": "TTsNode",
+      "pos": [
+        -2700.60302734375,
+        817.535888671875
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "IndexTTsModel",
+          "type": "IndexTTsModel",
+          "link": 79
+        },
+        {
+          "name": "emotion",
+          "shape": 7,
+          "type": "emotion",
+          "link": 81
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            82
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TTsNode"
+      },
+      "widgets_values": [
+        "大家好，我现在正在bilibili 体验 ai 科技，说实话，来之前我绝对想不到！AI技术已经发展到这样匪夷所思的地步了！比如说，现在正在说话的其实是B站为我现场复刻的数字分身，简直就是平行宇宙的另一个我了。如果大家也想体验更多深入的AIGC功能，可以访问 bilibili studio，相信我，你们也会吃惊的。"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "LoadAudio",
+      "pos": [
+        -3534.76953125,
+        887.7813720703125
+      ],
+      "size": [
+        270,
+        136
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            80
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "voice_01.wav",
+        null,
+        ""
+      ]
+    },
+    {
+      "id": 102,
+      "type": "PreviewAudio",
+      "pos": [
+        -2215.155517578125,
+        803.7377319335938
+      ],
+      "size": [
+        270,
+        88
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 82
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAudio"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      79,
+      98,
+      0,
+      99,
+      0,
+      "IndexTTsModel"
+    ],
+    [
+      80,
+      101,
+      0,
+      100,
+      0,
+      "AUDIO"
+    ],
+    [
+      81,
+      100,
+      0,
+      99,
+      1,
+      "emotion"
+    ],
+    [
+      82,
+      99,
+      0,
+      102,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7247295000000122,
+      "offset": [
+        4034.7588146883622,
+        -532.958602096086
+      ]
+    },
+    "frontendVersion": "1.27.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

@@ -29,7 +29,7 @@ class TTsNode(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, IndexTTsModel, spk_audio=None, text=None, emotion=None) -> io.NodeOutput:
+    def execute(cls, IndexTTsModel, text=None, emotion=None) -> io.NodeOutput:
         output_dir = folder_paths.get_temp_directory()
         prefix_append = "_temp_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
