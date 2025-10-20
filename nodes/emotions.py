@@ -8,9 +8,9 @@ class EmotionFromAudioNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="EmotionFromAudioNode",
-            display_name="情感-音频",
+            display_name="emotionByAudio",
             category="ComfyUI-Simple-IndexTTS",
-            description="音频生成音色",
+            description="emotionByAudio",
             inputs=[
                 io.String.Input("timbre_name"),
                 io.Audio.Input("spk_audio"),
@@ -45,9 +45,9 @@ class EmotionFromTensorNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="EmotionFromTensorNode",
-            display_name="情感-张量",
+            display_name="emotionByTensor",
             category="ComfyUI-Simple-IndexTTS",
-            description="音频生成音色",
+            description="emotionByTensor",
             inputs=[
                 io.String.Input("timbre_name"),
                 io.Audio.Input("spk_audio"),
@@ -86,9 +86,9 @@ class EmotionFromTextNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="EmotionFromTextNode",
-            display_name="情感-文本",
+            display_name="emotionByText",
             category="ComfyUI-Simple-IndexTTS",
-            description="音频生成音色",
+            description="emotionByText",
             inputs=[
                 io.String.Input("timbre_name"),
                 io.Audio.Input("spk_audio"),
@@ -119,9 +119,9 @@ class MergeEmotionNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="MergeEmotionNode",
-            display_name="合并情感音色",
+            display_name="MergeEmotion",
             category="ComfyUI-Simple-IndexTTS",
-            description="合并情感音色",
+            description="MergeEmotion",
             inputs=[
                 io.Custom("emotion").Input("emotion1"),
                 io.Custom("emotion").Input("emotion2", optional=True),
