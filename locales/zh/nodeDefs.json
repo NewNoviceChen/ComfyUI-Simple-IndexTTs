@@ -1,0 +1,192 @@
+{
+  "AutoLoadModelNode": {
+    "display_name": "自动加载模型",
+    "inputs": {
+    },
+    "outputs": {
+      "0": {
+        "name": "IndexTTs2模型实例",
+        "tooltip": "IndexTTs2模型实例"
+      }
+    }
+  },
+  "EmotionFromAudioNode": {
+    "display_name": "音频-情感",
+    "inputs": {
+      "timbre_name": {
+        "name": "音色名称",
+        "tooltip": "供后续批量生成指定说话人使用"
+      },
+      "spk_audio": {
+        "name": "音色参考音频",
+        "tooltip": "以此音频控制音色"
+      },
+      "emo_audio": {
+        "name": "情感参考音频",
+        "tooltip": "以此音频控制情感"
+      },
+      "emo_waveform_weight": {
+        "name": "参考权重",
+        "tooltip": "参考权重"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "情感音色",
+        "tooltip": "情感音色"
+      }
+    }
+  },
+  "EmotionFromTensorNode": {
+    "display_name": "张量-情感",
+    "inputs": {
+      "timbre_name": {
+        "name": "音色名称",
+        "tooltip": "供后续批量生成指定说话人使用"
+      },
+      "spk_audio": {
+        "name": "音色参考音频",
+        "tooltip": "以此音频控制音色"
+      },
+      "use_random": {
+        "name": "是否启用随机情感向量",
+        "tooltip": ""
+      },
+      "happy": {
+        "name": "开心",
+        "tooltip": ""
+      },
+      "angry": {
+        "name": "生气",
+        "tooltip": ""
+      },
+      "sad": {
+        "name": "悲伤",
+        "tooltip": ""
+      },
+      "afraid": {
+        "name": "害怕",
+        "tooltip": ""
+      },
+      "disgusted": {
+        "name": "厌恶",
+        "tooltip": ""
+      },
+      "melancholic": {
+        "name": "忧郁",
+        "tooltip": ""
+      },
+      "surprised": {
+        "name": "惊讶",
+        "tooltip": ""
+      },
+      "calm": {
+        "name": "平静",
+        "tooltip": ""
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "情感音色",
+        "tooltip": "情感音色"
+      }
+    }
+  },
+  "EmotionFromTextNode": {
+    "display_name": "文本-情感",
+    "inputs": {
+      "timbre_name": {
+        "name": "音色名称",
+        "tooltip": "供后续批量生成指定说话人使用"
+      },
+      "spk_audio": {
+        "name": "音色参考音频",
+        "tooltip": "以此音频控制音色"
+      },
+      "emo_text": {
+        "name": "情感参考文本",
+        "tooltip": "以此文本控制情感"
+      },
+      "emo_text_weight": {
+        "name": "参考权重",
+        "tooltip": "参考权重"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "情感音色",
+        "tooltip": "情感音色"
+      }
+    }
+  },
+  "MergeEmotionNode": {
+    "display_name": "合并情感音色",
+    "inputs": {
+      "emotion1": {
+        "name": "音色1"
+      },
+      "emotion2": {
+        "name": "音色2"
+      },
+      "emotion3": {
+        "name": "音色3"
+      },
+      "emotion4": {
+        "name": "音色4"
+      },
+      "emotion5": {
+        "name": "音色5"
+      },
+      "emotion6": {
+        "name": "音色6"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "情感音色列表",
+        "tooltip": "情感音色列表"
+      }
+    }
+  },
+  "TTsNode": {
+    "display_name": "单次生成音频",
+    "inputs": {
+      "IndexTTsModel": {
+        "name": "IndexTTs模型"
+      },
+      "text": {
+        "name": "音频文本"
+      },
+      "emotion": {
+        "name": "情感音色",
+        "tooltip": "情感音色"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "音频"
+      }
+    }
+  },
+  "BatchTTsNode": {
+    "display_name": "批量生成音频",
+    "inputs": {
+      "IndexTTsModel": {
+        "name": "IndexTTs模型"
+      },
+      "text": {
+        "name": "音频文本",
+        "tooltip": "控制说话人 例如：role1:hello ; 控制间隔 例如pause:2"
+      },
+      "emotion_list": {
+        "name": "情感音色列表",
+        "tooltip": "情感音色列表"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "音频"
+      }
+    }
+  }
+}

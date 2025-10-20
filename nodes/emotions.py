@@ -118,7 +118,7 @@ class MergeEmotionNode(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="EmotionFromTextNode",
+            node_id="MergeEmotionNode",
             display_name="合并情感音色",
             category="ComfyUI-Simple-IndexTTS",
             description="合并情感音色",

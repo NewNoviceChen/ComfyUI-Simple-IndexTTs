@@ -1,3 +1,4 @@
+import math
 import os
 import random
 import re
@@ -94,13 +95,14 @@ class BatchTTsNode(io.ComfyNode):
         pattern = r'(.+?):\s*(.+)'
         matches = re.findall(pattern, text)
         waveforms = []
-        sample_rate =None
+        sample_rate = 22050
         for name, content in matches:
-            print(f"名称: {name}, 内容: {content}")
+            if name == "pause":
+                duration = float(content)
+                silence = torch.zeros(1, int(sample_rate * duration))
+                waveforms.append(silence)
             for emotion in emotion_list:
                 if emotion["timbre_name"] == name:
-                    print(emotion)
-                    print(emotion["timbre_name"])
                     output_dir = folder_paths.get_temp_directory()
                     prefix_append = "_temp_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
                     full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
@@ -117,7 +119,6 @@ class BatchTTsNode(io.ComfyNode):
                                             emo_audio_prompt=emo_waveform,
                                             emo_alpha=emo_waveform_weight,
                                             verbose=True)
-                        print(emotion["type"],emotion["timbre_name"])
                     elif emotion["type"] == "tensor":
                         use_random = emotion["use_random"]
                         emo_tensor = emotion["emo_tensor"]
@@ -127,7 +128,6 @@ class BatchTTsNode(io.ComfyNode):
                                             emo_vector=emo_tensor,
                                             use_random=use_random,
                                             verbose=True)
-                        print(emotion["type"], emotion["timbre_name"])
                     elif emotion["type"] == "text":
                         emo_text = emotion["emo_text"]
                         emo_text_weight = emotion["emo_text_weight"]
@@ -138,10 +138,8 @@ class BatchTTsNode(io.ComfyNode):
                                             emo_alpha=emo_text_weight,
                                             emo_text=emo_text,
                                             verbose=True)
-                        print(emotion["type"], emotion["timbre_name"])
                     waveform, sample_rate = torchaudio.load(output_path)
                     waveforms.append(waveform)
-        result = torch.cat(waveforms,dim=1)
+        result = torch.cat(waveforms, dim=1)
         audio = {"waveform": result.unsqueeze(0), "sample_rate": sample_rate}
         return io.NodeOutput(audio, ui=ui.PreviewAudio(audio, cls=cls))
-

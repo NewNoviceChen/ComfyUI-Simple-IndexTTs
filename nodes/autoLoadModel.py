@@ -9,9 +9,9 @@ class AutoLoadModelNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="AutoLoadModelNode",
-            display_name="自动加载模型",
+            display_name="AutoLoadModel",
             category="ComfyUI-Simple-IndexTTS",
-            description="自动加载模型",
+            description="AutoLoadModel",
             inputs=[
 
             ],
