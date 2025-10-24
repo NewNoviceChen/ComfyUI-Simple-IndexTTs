@@ -14,9 +14,9 @@ class TTsNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="TTsNode",
-            display_name="音频生成",
+            display_name="TTsNode",
             category="ComfyUI-Simple-IndexTTS",
-            description="音频生成",
+            description="TTsNode",
             is_output_node=True,
             inputs=[
                 io.Custom("IndexTTsModel").Input("IndexTTsModel"),
@@ -76,9 +76,9 @@ class BatchTTsNode(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         return io.Schema(
             node_id="BatchTTsNode",
-            display_name="批量音频生成",
+            display_name="BatchTTsNode",
             category="ComfyUI-Simple-IndexTTS",
-            description="批量音频生成",
+            description="BatchTTsNode",
             is_output_node=True,
             inputs=[
                 io.Custom("IndexTTsModel").Input("IndexTTsModel"),
